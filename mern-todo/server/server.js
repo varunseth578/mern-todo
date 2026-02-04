@@ -1,53 +1,19 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const CORS = require("cors");
+const cors = require("cors");
+
+const authRoutes = require("./routes/auth");
+const todoRoutes = require("./routes/todo");
 
 const app = express();
 app.use(express.json());
-app.use(CORS());
-
-app.listen(8080, () => {
-  console.log("Server started on port 8080");
-});
+app.use(cors());
 
 mongoose.connect("mongodb://localhost:27017/test");
 
-const todoSchema = new mongoose.Schema({
-  title: String,
-  is_completed: {
-    type: Boolean,
-    default: false,
-  },
-});
+app.use("/", authRoutes);    
+app.use("/", todoRoutes);      
 
-const Todo = mongoose.model("Todo", todoSchema);
-
-app.get("/get_all", async (req, res) => {
-  const todos = await Todo.find();
-  return res.json({ todos });
-});
-
-app.post("/complete", async (req, res) => {
-  const { id } = req.body;
-
-  const todo = await Todo.findById(id);
-  todo.is_completed = !todo.is_completed;
-  await todo.save();
-
-  const todos = await Todo.find();
-  res.json(todos);
-});
-
-app.post("/create", async (req, res) => {
-  const { todo } = req.body;
-  await Todo.create({ title: todo });
-  const todos = await Todo.find();
-  res.json(todos);
-});
-
-app.post("/delete", async (req, res) => {
-  const { id } = req.body;
-  await Todo.findByIdAndDelete(id);
-  const todos = await Todo.find();
-  res.json(todos);
+app.listen(8080, () => {
+  console.log("Server running on port 8080");
 });
